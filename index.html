@@ -1068,9 +1068,12 @@
 
         // تعريف تقييمات الألوان مع ألوان خلفية مرافقة
         const ratings = [
-            { labelAr: 'اخضر', labelEn: 'green', min: 70, borderColor: 'border-r-8 border-r-green-500' },
-            { labelAr: 'اصفر', labelEn: 'yellow', min: 45, borderColor: 'border-r-8 border-r-yellow-300' },
-            { labelAr: 'احمر', labelEn: 'red', min: 0, borderColor: 'border-r-8 border-r-red-500' },
+            { labelAr: 'ممتاز', labelEn: 'Excellent', min: 90, borderColor: 'border-r-4 border-r-green-500' },
+            { labelAr: 'جيد جداً', labelEn: 'Very Good', min: 75, borderColor: 'border-r-4 border-r-green-500' },
+            { labelAr: 'جيد', labelEn: 'Good', min: 60, borderColor: 'border-r-4 border-r-yellow-300' },
+            { labelAr: 'مقبول', labelEn: 'Acceptable', min: 40, borderColor: 'border-r-4 border-r-yellow-300' },
+            { labelAr: 'ضعيف', labelEn: 'Weak', min: 20, borderColor: 'border-r-4 border-r-red-500' },
+            { labelAr: 'تالف', labelEn: 'Damaged', min: 0, borderColor: 'border-r-4 border-r-red-500' },
         ];
 
 
@@ -1602,10 +1605,11 @@
     const borderColor = rateObj.borderColor || 'border-gray-300';
 
     html += `
-      <div class="bg-gray-50 p-4 rounded-lg border ${borderColor}">
+      <div class="bg-gray-50 p-4 rounded-lg border ${borderColor} ${spanClass}">
         <p class="font-bold">${pc.arName} / ${pc.part}</p>
-        <p class="mt-2">النسبة: ${pc.value}</p>
-        <p class="mt-2">الملاحظات: ${pc.note}</p>
+        <p>النسبة: ${pc.value}</p>
+        ${pc.note ? `<p>ملاحظات: ${pc.note}</p>` : ''}
+        <p class="mt-2 text-gray-600">${pc.rating}</p>
       </div>
     `;
   });
@@ -1616,6 +1620,9 @@
   `;
   return html;
 }
+
+
+
 
 
         // يولد جزء "فحص النظام العام" في التقرير
@@ -1638,7 +1645,8 @@
       <div class="bg-gray-50 p-4 rounded-lg border border-gray-300 ${borderColor}">
         <p class="font-bold">${gc.partAr} / ${gc.partEn}</p>
         <p class="mt-2">التقييم: ${gc.extra}</p>
-        <p class="mt-2">الملاحظات: ${gc.note}</p>
+        <p class="mt-2">ملاحظات: ${gc.note}</p>
+        <p class="mt-2 text-gray-600">${gc.rating}</p>
       </div>
     `;
             });
