@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام فحص الدراجات النارية - رود بايكر</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.7.5/sweetalert2.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.7.5/sweetalert2.all.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+
+        /* عامّ لجميع العناصر */
+        * {
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            direction: rtl;
+            color: #1e293b;
+            overflow-x: hidden;
+            visibility: hidden;
+        }
+
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        .page.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #f8bf3c 0%, #d4a017 100%);
+        }
+
+        .dark-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .photo-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .photo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .border-r-4 {
+            border-right-width: 4px;
+        }
+
+        .photo-item {
+            position: relative;
+        }
+
+        .photo-remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+        }
+
+        .photo-remove-btn i {
+            pointer-events: none;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .en-text {
+            direction: ltr;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid #f8bf3c;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* تنسيق الصور في التقرير - 4 صور في الصفحة */
+        .report-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .bg-gray-50 p {
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .report-photo-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 200px;
+            margin-bottom: 10px;
+        }
+
+        .report-photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* أنماط الصفحة الرئيسية الجديدة */
+        .welcome-header {
+            background: url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2070') center/cover;
+            height: 300px;
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .welcome-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.7));
+        }
+
+        .motorcycle-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            height: 220px;
+            cursor: pointer;
+        }
+
+        .motorcycle-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .motorcycle-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .motorcycle-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .motorcycle-card .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .selected-bike {
+            border: 3px solid #f8bf3c;
+            box-shadow: 0 0 20px rgba(248, 191, 60, 0.7);
+        }
+
+        .report-photo-item {
+            page-break-inside: avoid;
+        }
+
+        .photo-page {
+            page-break-after: always;
+        }
+
+        @media print {
+            .photo-page {
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #ddd;
+            }
+        }
+
+        @media print {
+
+            /* 1) اطبع الخلفيّات والـ gradients */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* 2) إزالة الظلال والحواف غير المرغوب فيها */
+            .shadow-lg,
+            .shadow-xl,
+            .box-shadow {
+                box-shadow: none !important;
+            }
+
+            /* 3) أخفِ العناصر التفاعليّة */
+            button,
+            input,
+            select,
+            textarea,
+            .loading-overlay,
+            .motorcycle-card,
+            form,
+            #inspectionForm {
+                display: none !important;
+            }
+
+            /* 4) أبقِ فقط التقرير ليملأ الصفحة */
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            .report-container,
+            #reportContainer {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                overflow: visible !important;
+            }
+
+            /* 5) ضبط شبكة الصور كما تريد */
+            .report-photo-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                overflow: visible !important;
+            }
+
+            .report-photo-item {
+                height: 200px !important;
+                page-break-inside: avoid;
+                overflow: visible !important;
+            }
+
+            .report-photo-item:nth-child(4n) {
+                page-break-after: always;
+            }
+
+            /* 6) هوامش الطباعة */
+            @page {
+                margin: 10mm;
+            }
+
+            /* إجبار grid-cols‑1 و md:grid-cols‑2 على عمودين */
+            #reportContainer .grid-cols-1,
+            #reportContainer .md\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                overflow: visible !important;
+            }
+
+            #reportContainer .grid-cols-4 {
+                grid-template-columns: repeat(4, 1fr) !important;
+            }
+
+            #reportContainer .col-span-2 {
+                grid-column: span 2 !important;
+            }
+
+            /* --- تنسيق الهيدر في الطباعة --- */
+            .dark-gradient>.flex.md\:flex-row {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            }
+
+            .dark-gradient>.flex.md\:flex-row>div {
+                width: 50% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .dark-gradient h1,
+            .dark-gradient h2 {
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1.2 !important;
+            }
+
+            .dark-gradient .md\:text-right {
+                text-align: right !important;
+            }
+
+            .dark-gradient .md\:text-left {
+                text-align: left !important;
+            }
+
+            .dark-gradient .en-text h1 {
+                font-size: 1.5rem !important;
+            }
+
+            .dark-gradient .en-text h2 {
+                font-size: 1rem !important;
+            }
+
+            /* السماح بتقسيم الأقسام عبر الصفحات */
+            #reportContainer>div {
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+            }
+
+            /* منع تكسر البطاقات الفردية داخل الشبكة */
+            #reportContainer .grid>div {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
+    </style>
+    <noscript>
+        <style>
+            /* في حالة تعطّل جافاسكربت، أظهر كل المحتوى */
+            body {
+                visibility: visible;
+            }
+
+            .page {
+                display: block;
+            }
+        </style>
+        <div style="padding:1em; background:#fee; color:#900; text-align:center;">
+            يبدو أنّ جافاسكربت معطّل أو فشل في العمل — الرجاء تمكينه لإتمام الوظائف.
+        </div>
+    </noscript>
+
+</head>
+
+<body class="bg-gray-100">
+    <!-- شاشة التحميل -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- الصفحة الاولى: صفحة الترحيب -->
+    <div id="welcomePage" class="page active">
+        <div class="max-w-6xl mx-auto py-8">
+            <!-- صورة الترحيب -->
+            <div class="welcome-header flex items-center justify-center mb-2">
+                <div class="text-center relative z-10 px-4">
+                    <h2 class="text-4xl font-bold text-white mb-4">مرحباً بكم في نظام فحص الدراجات النارية</h2>
+                    <p class="text-xl text-yellow-300 max-w-3xl mx-auto">من خلال هذا النظام، يمكنك إنشاء تقارير فنية
+                        مفصلة تشمل
+                        جميع الجوانب الميكانيكية والكهربائية والهيكلية للدراجة.</p>
+                </div>
+            </div>
+
+            <!-- معلومات إضافية -->
+            <div class="bg-yellow-50 border-l-4 border-r-4 border-yellow-500 p-6  text-center mb-2">
+                <p class="font-bold text-lg mb-2">معلومات هامة:</p>
+                <p>يجب اختيار نوع الدراجة النارية قبل إنشاء التقرير لضمان الحصول على تقييم دقيق ومخصص لنوع الدراجة.</p>
+                <p class="mt-3">يمكنك دائمًا الرجوع إلى هذه الصفحة عن طريق زر "رجوع" في صفحة تعبئة البيانات.</p>
+            </div>
+
+            <!-- اختيار نوع الدراجة -->
+            <div class="bg-white  shadow-lg p-6 mb-4">
+                <h1 class="text-3xl font-bold text-center mb-8 text-blue-900">اختر نوع الدراجة النارية</h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                    <!-- بطاقة ريس -->
+                    <div class="motorcycle-card" data-type="race">
+                        <div
+                            class=" rounded-2xl w-full h-full flex items-center justify-center border-2 border-gray-700 hover:border-yellow-500">
+                            <i class="fas fa-bolt text-6xl text-red-500"></i>
+                        </div>
+                        <div class="overlay">
+                            <h3 class="text-xl font-bold">ريس / Race</h3>
+                        </div>
+                    </div>
+
+                    <!-- بطاقة قولدوينق -->
+                    <div class="motorcycle-card" data-type="goldwing">
+                        <div
+                            class=" rounded-2xl w-full h-full flex items-center justify-center border-2 border-gray-700 hover:border-yellow-500">
+                            <i class="fas fa-road text-6xl text-blue-500"></i>
+                        </div>
+                        <div class="overlay">
+                            <h3 class="text-xl font-bold">قولدوينق / Goldwing</h3>
+                        </div>
+                    </div>
+
+                    <!-- بطاقة بانشي -->
+                    <div class="motorcycle-card" data-type="atv">
+                        <div
+                            class=" rounded-2xl w-full h-full flex items-center justify-center border-2 border-gray-700 hover:border-yellow-500">
+                            <i class="fas fa-truck-monster text-6xl text-green-500"></i>
+                        </div>
+                        <div class="overlay">
+                            <h3 class="text-xl font-bold">بانشي / ATV</h3>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الصفحة الثانية: تعبئة البيانات -->
+    <div id="dataEntryPage" class="page">
+        <div class="max-w-6xl mx-auto">
+            <!-- العنوان -->
+            <div class="welcome-header flex items-center justify-center mb-2">
+                <div class="text-center relative z-10 px-4">
+                    <h2 class="text-4xl font-bold text-white mb-2">ادخل جميع بيانات تقرير الفحص</h2>
+                    <h3 class="text-4xl font-bold text-white mb-2">Enter all inspection report data</h3>
+                </div>
+            </div>
+
+            <!-- نموذج الفحص -->
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <form id="inspectionForm" novalidate>
+                    <!-- معلومات الفحص -->
+                    <div class="mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-20">
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">رقم الفحص / Inspection
+                                    No.</label>
+                                <input type="text" id="inspectionNumber"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent text-center"
+                                    readonly>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">تاريخ الفحص / Inspection
+                                    Date</label>
+                                <input type="text" id="inspectionDate"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent text-center"
+                                    required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- بيانات المهندس والعميل -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-bold border-b-2 border-blue-900 pb-2 mb-4 text-blue-900"><i
+                                class="fas fa-pen"></i>
+                            بيانات العميل / Customer Data</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">المهندس / Engineer</label>
+                                <input type="text" id="engineer"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">الفرع / Branch</label>
+                                <input type="text" id="branch"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">العميل / Customer</label>
+                                <input type="text" id="customer"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">الهاتف / Phone</label>
+                                <input type="tel" id="phone" pattern="\d{9,15}"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                                <p class="text-sm text-gray-500 mt-1 text-center">يجب أن يبدا 05 / Must start 05</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- بيانات الدراجة -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-bold border-b-2 border-blue-900 pb-2 mb-4 text-blue-900"><i
+                                class="fas fa-pen"></i>
+                            بيانات الدراجة النارية / Motorcycle Data</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">الطراز / Model</label>
+                                <input type="text" id="model"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">اللون / color</label>
+                                <input type="text" id="color"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">الموديل / Year</label>
+                                <input type="number" id="year" min="1990"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">رقم الشاصي / VIN</label>
+                                <input type="text" id="vin"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">(كم/ميل) /
+                                    (km/mile)</label>
+                                <input type="number" id="mileage"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-bold mb-2 text-center">رقم اللوحة / Plate
+                                    Number</label>
+                                <input type="text" id="plateNumber"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                                    required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- بيانات فحص الضغط -->
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-blue-900 pb-2 mb-4 text-blue-900"><i
+                                class="fas fa-pen"></i>
+                            فحص نظام الضغط / Pressure system check</h3>
+                        <div id="pressureChecks" class="bg-white rounded-2xl p-6 mb-8"></div>
+                    </div>
+
+                    <!-- ===== أقسام الفحص العامة ===== -->
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-blue-900 pb-2 mb-4 text-blue-900"><i
+                                class="fas fa-pen"></i>
+                            فحص النظام العام / General system check</h3>
+                        <div id="generalChecksContainer" class="mb-8"></div>
+                    </div>
+
+                    <!-- الملاحظات -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-bold mb-4 text-blue-900 text-center">ملاحظات إضافية / Additional Notes
+                        </h3>
+                        <textarea id="notes" rows="4"
+                            class="w-full p-3 border border-blue-900 rounded-lg focus:ring-2 text-center"
+                            placeholder="أدخل الملاحظات هنا... / Enter notes here..."></textarea>
+                    </div>
+
+                    <!-- الصور -->
+                    <!-- الصور -->
+                    <div class="mb-8">
+                        <div class="text-center">
+                            <!-- زر اختيار المصدر -->
+                            <button type="button" id="selectPhotoSourceBtn"
+                                class="bg-blue-950 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:-translate-y-1">
+                                <i class="fas fa-camera mr-2"></i> إضافة صورة / Add Photo
+                            </button>
+                            <!--input تبقى مخفية، نستعملها لتعامل المستعرض مع الملفات-->
+                            <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+                            <!-- هنا ستُعرض الصور -->
+                            <div id="photosPreview" class="photo-grid mt-6"></div>
+                        </div>
+                    </div>
+
+
+                    <!-- أزرار التحكم -->
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mt-20">
+                        <button type="button" onclick="confirmBack()"
+                            class="w-full md:w-auto bg-blue-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300">
+                            رجوع / back <i class="fas fa-arrow-right  mr-2"></i>
+                        </button>
+                        <button type="button" onclick="resetForm()"
+                            class="w-full md:w-auto bg-red-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300">
+                            إعادة ضبط / Reset <i class="fas fa-redo mr-2"></i>
+                        </button>
+                        <button type="submit" onclick="confirmNext()"
+                            class="w-full md:w-auto bg-green-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300">
+                            التالي / Next <i class="fas fa-arrow-left mr-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- الصفحة الثالثة: عرض البيانات -->
+    <div id="reportPage" class="page">
+        <div class="max-w-6xl mx-auto report-container bg-white rounded-2xl shadow-lg p-6 ">
+            <div id="reportContainer">
+                <!-- سيتم ملء المحتوى هنا بواسطة JavaScript -->
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-center gap-4 mt-8">
+                <button type="button" onclick="goBack()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ">
+                    <i class="fas fa-arrow-right mr-2"></i> تعديل البيانات / Edit Data
+                </button>
+                <button id="printBtn" type="button"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:-translate-y-1">
+                    <i class="fas fa-print mr-2"></i> طباعة / Print
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // متغيرات النظام
+        let inspectionData = {};
+        let uploadedPhotos = [];
+        let selectedBikeType = null;
+
+        // تعريف حقول الضغط (إنجليزي وعربي)
+        const pressureFields = {
+            goldwing: [
+                'Piston Pressure 1', 'Piston Pressure 2', 'Piston Pressure 3',
+                'Piston Pressure 4', 'Piston Pressure 5', 'Piston Pressure 6',
+                'Fuel Pump Pressure'
+            ],
+            race: [
+                'Piston Pressure 1', 'Piston Pressure 2', 'Piston Pressure 3',
+                'Piston Pressure 4', 'Fuel Pump Pressure'
+            ]
+        };
+        const pressureFieldsAr = {
+            goldwing: [
+                'ضغط بستن 1', 'ضغط بستن 2', 'ضغط بستن 3',
+                'ضغط بستن 4', 'ضغط بستن 5', 'ضغط بستن 6',
+                'ضغط طرمبة البنزين'
+            ],
+            race: [
+                'ضغط بستن 1', 'ضغط بستن 2', 'ضغط بستن 3',
+                'ضغط بستن 4', 'ضغط طرمبة البنزين'
+            ]
+        };
+
+        // دمج بنود الفحص لكل فئة في عنصر واحد (شبكة)
+        const inspectionDataAr = {
+            goldwing: [
+                {
+                    parts: [
+                        'الشاصي',
+                        'صاجه حمايه تحت',
+                        'كرسي الماكينة يمين',
+                        'كرسي الماكينة يسار',
+                        'قاعدة الطبلون',
+                        'المرايات',
+                        'قشره الطبلون',
+                        'الزجاج الامامي',
+                        'الأدراج',
+                        'الكرسي الامامي',
+                        'الشنطة الخلفية',
+                        'التانكي',
+                        'شنطة يمين',
+                        'شنطة يسار',
+                        'غطاء البطارية',
+                        'غطاء التانكي',
+                        'خد يمين',
+                        'خد يسار',
+                        'منقار امامي',
+                        'منقار خلفي',
+                        'الواجهة الامامية',
+                        'غطاء الماكينة يمين',
+                        'غطاء الماكينة يسار',
+                        'غطاء الراس يمين',
+                        'غطاء الراس يسار',
+                        'الانارة امامية',
+                        'الانارة خلفية',
+                        'الإشارات الامامية',
+                        'الإشارات الخلفية',
+                        'لوحة العدادات',
+                        'يد الكلتش',
+                        'يد الفرامل',
+                        'فوت رست امامي',
+                        'فوت رست خلفي',
+                        'قاعده اللوحة',
+                        'رمان الدركسون',
+                        'مفاتيح تحكم يمين',
+                        'مفاتيح تحكم يسار',
+                        'سخانات مقابض ومرتبه',
+                        'السماعات',
+                        'القير',
+                        'عمود الدوران الخلفي',
+                        'صوت تيكات السلندر',
+                        'الجرم',
+                        'التهريب',
+                        'المكينة',
+                        'صره الكارتير',
+                        'ربلات الراس',
+                        'البواجي',
+                        'الرادیتر',
+                        'الشكمان',
+                        'فلتر الهواء',
+                        'التانكي',
+                        'غطاء التانكي',
+                        'الكليبرات',
+                        'الفرامل امامي',
+                        'الفرامل خلفي',
+                        'الهيدروليك',
+                        'المساعد امامي',
+                        'المساعد خلفي',
+                        'هوب امامي',
+                        'هوب خلفي',
+                        'رمان الجنوط',
+                        'الكفرات امامي',
+                        'الكفرات خلفي',
+                        'F1',
+                        'الدينمو',
+                        'غطاء البطارية'
+                    ]
+                }
+            ],
+            race: [
+                {
+                    parts: [
+                        'الشاصي',
+                        'شوكة الشاصي',
+                        'التطويلة',
+                        'التنزيلات',
+                        'الذيل',
+                        'قاعدة الطبلون',
+                        'الفوت رست',
+                        'الفيابر',
+                        'الزجاج الامامي',
+                        'المرایات',
+                        'الكرسي الامامي',
+                        'الكرسي الخلفي',
+                        'التانكي',
+                        'لوحة العدادات',
+                        'تي الدركسون',
+                        'ید الدركسون',
+                        'ید الكلتش',
+                        'ید الفرامل',
+                        'القیر',
+                        'عصا القیر',
+                        'الكلتشات',
+                        'صوفة الكلتش',
+                        'غطاء الكلتش',
+                        'جنزیر الماكینة',
+                        'الجنزير',
+                        'الساعة الامامية',
+                        'الساعة الخلفية',
+                        'درام الكلتش',
+                        'غطاء الساعة الامامية',
+                        'الكارتیر',
+                        'صرة الكارتير',
+                        'غطاء المغنیت',
+                        'التھريب',
+                        'ربلات الراس',
+                        'البواجي',
+                        'الرادیتر',
+                        'فلتر الھواء',
+                        'الدبة',
+                        'المساعدات الامامية',
+                        'الجنوط',
+                        'الهوب الامامي',
+                        'الهوب الخلفي',
+                        'الكفرات الامامي',
+                        'الكفرات الخلفي',
+                        'الدمبر',
+                        'عصا الفرامل',
+                        'الفرامل الامامي',
+                        'الفرامل الخلفي',
+                        'الكليبرات',
+                        'F1 Fuse',
+                        'شاحن الكهرباء',
+                        'الانارة الامامية',
+                        'الانارة الخلفية',
+                        'الإشارات الامامية',
+                        'الإشارات الخلفية',
+                        'مفاتيح التحكم يمين',
+                        'مفاتيح التحكم يسار',
+                        'البوري'
+                    ]
+                }
+            ],
+            atv: [
+                {
+                    parts: [
+                        'الشاصي',
+                        'المقعد',
+                        'الشبك',
+                        'الفيابر',
+                        'الانوار',
+                        'الدركسون',
+                        'المساعدات',
+                        'الجنوط',
+                        'الكفرات',
+                        'هوب أمامي',
+                        'هوب خلفي',
+                        'فرامل أمامي',
+                        'فرامل خلفي',
+                        'المكينة',
+                        'القير',
+                        'العمود',
+                        'تهريب زيت/بنزين',
+                        'اللديتر',
+                        'الفلاتر',
+                        'الكهرباء',
+                        'نوع البستم/السلندر',
+                        'خرط البستم',
+                        'ساعة أمامية',
+                        'ساعة خلفية',
+                        'الجنزير'
+                    ]
+                }
+            ]
+        };
+
+        const inspectionDataEn = {
+            goldwing: [
+                {
+                    parts: [
+                        'Chassis',
+                        'Belly Guard',
+                        'Engine Mount Right',
+                        'Engine Mount Left',
+                        'Handlebar Base',
+                        'Mirrors',
+                        'Dashboard Fairing',
+                        'Front Windshield',
+                        'Storage Compartments',
+                        'Front Seat',
+                        'Rear Trunk',
+                        'Fuel Tank',
+                        'Right Pannier',
+                        'Left Pannier',
+                        'Battery Cover',
+                        'Tank Cap',
+                        'Right Fender',
+                        'Left Fender',
+                        'Front Beak',
+                        'Rear Beak',
+                        'Front Fairing',
+                        'Engine Cover Right',
+                        'Engine Cover Left',
+                        'Cylinder Head Cover R',
+                        'Cylinder Head Cover L',
+                        'Front Lights',
+                        'Rear Lights',
+                        'Front Indicators',
+                        'Rear Indicators',
+                        'Instrument Panel',
+                        'Clutch Lever',
+                        'Brake Lever',
+                        'Front Foot Rest',
+                        'Rear Foot Rest',
+                        'License Plate Holder',
+                        'Steering Bearing',
+                        'Right Control Switch',
+                        'Left Control Switch',
+                        'Heated Grips & Seat',
+                        'Speakers',
+                        'Gearbox',
+                        'Rear Driveshaft',
+                        'Cylinder Ticking Noise',
+                        'Crankcase',
+                        'Leakage',
+                        'Engine',
+                        'Crankcase Bolt',
+                        'Head Gaskets',
+                        'Spark Plugs',
+                        'Radiator',
+                        'Exhaust Pipe',
+                        'Air Filter',
+                        'Fuel Tank',
+                        'Tank Cap',
+                        'Calipers',
+                        'Front Brakes',
+                        'Rear Brakes',
+                        'Hydraulics',
+                        'Front Suspension',
+                        'Rear Suspension',
+                        'Front Hub',
+                        'Rear Hub',
+                        'Wheel Bearing',
+                        'Front Tire',
+                        'Rear Tire',
+                        'F1 Fuse',
+                        'Alternator',
+                        'Battery Cover'
+                    ]
+                }
+            ],
+            race: [
+                {
+                    parts: [
+                        'Chassis',
+                        'Chassis Fork',
+                        'Extension',
+                        'Lowering Blocks',
+                        'Tail',
+                        'Dashboard Base',
+                        'Foot Rest',
+                        'Fiberglass Panels',
+                        'Windshield',
+                        'Mirrors',
+                        'Front Seat',
+                        'Rear Seat',
+                        'Fuel Tank',
+                        'Dashboard',
+                        'Steering T',
+                        'Steering Handle',
+                        'Clutch Lever',
+                        'Brake Lever',
+                        'Gearbox',
+                        'Gear Stick',
+                        'Clutches',
+                        'Clutch Seal',
+                        'Clutch Cover',
+                        'Engine Chain',
+                        'Chain',
+                        'Front Sprocket',
+                        'Rear Sprocket',
+                        'Clutch Drum',
+                        'Front Sprocket Cover',
+                        'Crankcase',
+                        'Oil Drain Plug',
+                        'Magneto Cover',
+                        'Wiring',
+                        'Head Gaskets',
+                        'Spark Plugs',
+                        'Radiator',
+                        'Air Filter',
+                        'Muffler',
+                        'Front Shock Absorbers',
+                        'Rims',
+                        'Front Hub',
+                        'Rear Hub',
+                        'Front Tires',
+                        'Rear Tires',
+                        'Damper',
+                        'Brake Rod',
+                        'Front Brakes',
+                        'Rear Brakes',
+                        'Calipers',
+                        'F1 Fuse',
+                        'Charger',
+                        'Headlights',
+                        'Taillights',
+                        'Front Indicators',
+                        'Rear Indicators',
+                        'Right Control Switches',
+                        'Left Control Switches',
+                        'Horn'
+                    ]
+                }
+            ],
+            atv: [
+                {
+                    parts: [
+                        'Chassis',
+                        'Seat',
+                        'Rack',
+                        'Fairings',
+                        'Lights',
+                        'Handlebar',
+                        'Suspension',
+                        'Rims',
+                        'Tires',
+                        'Front Hub',
+                        'Rear Hub',
+                        'Front Brakes',
+                        'Rear Brakes',
+                        'Engine',
+                        'Gearbox',
+                        'Driveshaft',
+                        'Oil/Fuel Leakage',
+                        'Radiator',
+                        'Filters',
+                        'Electrical System',
+                        'Piston Type',
+                        'Piston Re-bore',
+                        'Front Gauge',
+                        'Rear Gauge',
+                        'Chain'
+                    ]
+                }
+            ]
+        };
+
+        // تعريف تقييمات الألوان مع ألوان خلفية مرافقة
+        const ratings = [
+            { labelAr: 'اخضر', labelEn: 'green', min: 70, borderColor: 'border-r-8 border-r-green-500' },
+            { labelAr: 'اصفر', labelEn: 'yellow', min: 45, borderColor: 'border-r-8 border-r-yellow-300' },
+            { labelAr: 'احمر', labelEn: 'red', min: 0, borderColor: 'border-r-8 border-r-red-500' },
+        ];
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                initializeSystem();
+                restoreState();
+                setupEventListeners();
+            } catch (err) {
+                console.error('Error during init:', err);
+            } finally {
+                document.body.style.visibility = 'visible';
+            }
+        });
+
+        function initializeSystem() {
+            setupBikeSelection();
+            renderPressureChecks();
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('inspectionDate').value = formatDate(today);
+            document.getElementById('inspectionDate').max = today;
+            document.getElementById('year').max = new Date().getFullYear();
+
+            generateInspectionNumber();
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            collectFormData();
+            generateReport();
+            showPage('reportPage');
+            saveState();
+        }
+
+        function setupEventListeners() {
+            // 1) اختيار بطاقة الدراجة
+            document.querySelectorAll('.motorcycle-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.motorcycle-card').forEach(c => c.classList.remove('selected-bike'));
+                    card.classList.add('selected-bike');
+                    selectedBikeType = card.dataset.type;
+                    renderPressureChecks();
+                    renderGeneralChecks();
+                    showPage('dataEntryPage');
+                    saveState();
+                });
+            });
+
+            // 2) فتح حوار إضافة الصور
+            document.getElementById('selectPhotoSourceBtn')
+                .addEventListener('click', () => PhotoManager.showPhotoSourceDialog());
+
+            // 3) التعامل مع الملفات المرفوعة
+            document.getElementById('photoInput')
+                .addEventListener('change', e => {
+                    PhotoManager.handleFiles(e.target.files);
+                });
+
+            // 4) إرسال نموذج الفحص
+            document.getElementById('inspectionForm')
+                .addEventListener('submit', handleFormSubmit);
+
+            // 5) زر الطباعة المعدّل
+            document.getElementById('printBtn')
+                .addEventListener('click', printReport);
+        }
+
+
+        function setupBikeSelection() {
+            const bikeCards = document.querySelectorAll('.motorcycle-card');
+            bikeCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    bikeCards.forEach(c => c.classList.remove('selected-bike'));
+                    card.classList.add('selected-bike');
+                    selectedBikeType = card.dataset.type;
+                    renderPressureChecks();
+                    renderGeneralChecks();
+                    showPage('dataEntryPage');
+                });
+            });
+        }
+
+        function renderPressureChecks() {
+            if (!selectedBikeType || selectedBikeType === 'atv') {
+                const section = document.getElementById('pressureChecks').parentElement;
+                section.style.display = 'none';
+                return;
+            }
+
+            const container = document.getElementById('pressureChecks');
+            const section = container.parentElement;
+            const parts = pressureFields[selectedBikeType] || [];
+            const partsAr = pressureFieldsAr[selectedBikeType] || [];
+
+            if (parts.length === 0) {
+                section.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            section.style.display = '';
+            container.innerHTML = '';
+
+            for (let i = 0; i < parts.length; i += 2) {
+                const part1 = parts[i], arName1 = partsAr[i];
+                const isPump1 = part1.includes('Fuel'), maxVal1 = isPump1 ? 100 : 220;
+                const hasSecond = i + 1 < parts.length;
+                const part2 = hasSecond ? parts[i + 1] : null, arName2 = hasSecond ? partsAr[i + 1] : null;
+                const isPump2 = hasSecond && part2.includes('Fuel'), maxVal2 = isPump2 ? 100 : 220;
+
+                if (isPump1) {
+                    container.insertAdjacentHTML('beforeend',
+                        `<div class="md:col-span-2">${generateFieldHTML(part1, arName1, i, maxVal1)}</div>`
+                    );
+                } else if (hasSecond && isPump2) {
+                    container.insertAdjacentHTML('beforeend',
+                        `<div class="w-1/2">${generateFieldHTML(part1, arName1, i, maxVal1, true)}</div>`
+                    );
+                    container.insertAdjacentHTML('beforeend',
+                        `<div class="md:col-span-2">${generateFieldHTML(part2, arName2, i + 1, maxVal2)}</div>`
+                    );
+                } else if (hasSecond) {
+                    const html1 = generateFieldHTML(part1, arName1, i, maxVal1, true);
+                    const html2 = generateFieldHTML(part2, arName2, i + 1, maxVal2, true);
+                    container.insertAdjacentHTML('beforeend', wrapInFlex([html1, html2]));
+                } else {
+                    container.insertAdjacentHTML('beforeend',
+                        generateFieldHTML(part1, arName1, i, maxVal1)
+                    );
+                }
+            }
+        }
+
+        function renderGeneralChecks() {
+            if (!selectedBikeType) return;
+
+            const container = document.getElementById('generalChecksContainer');
+            container.innerHTML = '';
+
+            // 1) نجيب array البنود العربية والإنجليزية من العنصر الأول
+            const partsAr = inspectionDataAr[selectedBikeType][0].parts;
+            const partsEn = inspectionDataEn[selectedBikeType][0].parts;
+
+            // 2) نخلق ديف حاوي بشبكة 2 عمود (1 على الموبايل)
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mb-8';
+
+            // 3) نولّد لكل بند الواجهة باستخدام generateGeneralFieldHTML
+            partsAr.forEach((partAr, pIdx) => {
+                const partEn = partsEn[pIdx] || '';
+                // sIdx=0 دائماً لأن كل البنود في مجموعة واحدة
+                const html = generateGeneralFieldHTML(partEn, partAr, 0, pIdx);
+                grid.insertAdjacentHTML('beforeend', html);
+            });
+
+            // 4) نلصق الشبكة في الحاوية
+            container.appendChild(grid);
+        }
+
+
+
+        // يعيد HTML لكل بند فحص عام
+        function generateGeneralFieldHTML(partEn, partAr, sIdx, pIdx) {
+            return `
+  <div id="generalCheck_${sIdx}_${pIdx}"
+       class="mb-4 p-4 border rounded-lg border-r-4 border-gray-200">
+    <label class="block font-bold mb-2">${partAr} / ${partEn}</label>
+
+    <div class="flex flex-wrap gap-2 mb-2">
+      ${ratings.map((r, j) => `
+        <button type="button"
+                class="rating-btn w-40 text-center border border-gray-300 rounded-lg px-3 py-1 bg-white transition-colors"
+                data-index="${j}"
+                onclick="setGeneralRating(${sIdx}, ${pIdx}, ${j})">
+          ${r.labelAr} / ${r.labelEn}
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- الحقل الإضافي الظاهر دائماً -->
+    <input type="text"
+           id="extraInput_${sIdx}_${pIdx}"
+           class="w-full p-2 border border-gray-300 rounded-lg mb-2"
+           placeholder="تقييم اضافي .." />
+
+    <!-- textarea للملاحظات ظاهرة دائماً -->
+    <textarea id="generalNotes_${sIdx}_${pIdx}"
+              rows="2"
+              class="w-full p-2 border rounded-lg mb-2"
+              placeholder="ملاحظات إضافية…"></textarea>
+
+    <!-- مخفي فقط لتخزين قيمة التقييم -->
+    <input type="hidden" id="generalRating_${sIdx}_${pIdx}" value="">
+  </div>`;
+        }
+
+
+        // يعيّن تقييم بند الفحص العام ويحدّث المظهر
+        function setGeneralRating(sIdx, pIdx, ratingIndex) {
+            const container = document.getElementById(`generalCheck_${sIdx}_${pIdx}`);
+            const hiddenInput = document.getElementById(`generalRating_${sIdx}_${pIdx}`);
+            const notes = document.getElementById(`generalNotes_${sIdx}_${pIdx}`);
+            // إزالة التحديد من جميع الأزرار
+            container.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-800');
+            });
+            // تلوين الزر المختار
+            const selectedBtn = container.querySelector(`.rating-btn[data-index="${ratingIndex}"]`);
+            selectedBtn.classList.remove('bg-white', 'text-gray-800');
+            selectedBtn.classList.add('bg-blue-500', 'text-white');
+            // تخزين القيمة وتحديث الحدود
+            hiddenInput.value = ratingIndex;
+            ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
+            const rateObj = ratings[ratingIndex];
+            container.classList.add(...rateObj.borderColor.split(' '));
+            // إظهار خانة الملاحظات
+            notes.classList.remove('hidden');
+        }
+
+        // يُعيد المظهر المخزن بعد الاستعادة
+        function updateGeneralAppearance(sIdx, pIdx) {
+            const hiddenInput = document.getElementById(`generalRating_${sIdx}_${pIdx}`);
+            const ratingIndex = hiddenInput.value;
+            if (ratingIndex !== '') {
+                setGeneralRating(sIdx, pIdx, parseInt(ratingIndex, 10));
+            }
+        }
+
+        // يعيد HTML لحقل فحص الضغط
+        function generateFieldHTML(part, arName, index, maxVal, halfWidth = false) {
+            const containerWidth = halfWidth ? 'md:w-1/2 w-full' : 'w-full';
+            return `
+  <div class="mb-4 ${containerWidth} border border-r-4 border-gray-200 rounded-lg p-4">
+    <label class="block font-bold mb-1 text-gray-700">${arName} / ${part}</label>
+    <div class="flex flex-col md:flex-row gap-4">
+      <input
+        type="number"
+        id="pressure_${index}"
+        class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-gold-500"
+        min="0" max="${maxVal}"
+        oninput="updateRating(${index})"
+        placeholder="0 – ${maxVal}"
+        required
+      />
+      <input
+        type="text"
+        id="rating_${index}"
+        readonly
+        class="w-full p-2 border rounded-lg text-center font-semibold hidden"
+        placeholder="التقييم"
+      />
+    </div>
+    <textarea
+      id="notes_${index}"
+      class="w-full p-2 mt-2 border rounded-lg"
+      rows="2"
+      placeholder="ملاحظات... / Notes..."
+    ></textarea>
+  </div>`;
+        }
+
+        // يغلف مجموعة من HTML في Flex container
+        function wrapInFlex(items) {
+            return `
+<div class="flex flex-col md:flex-row gap-4 mb-4">
+  ${items.join('')}
+</div>`;
+        }
+
+        // يحسب ويعرض تقييم الضغط
+        function updateRating(idx) {
+            const input = document.getElementById(`pressure_${idx}`);
+            const display = document.getElementById(`rating_${idx}`);
+            const val = parseFloat(input.value);
+            const max = parseFloat(input.max);
+            const container = input.closest('div.mb-4');
+
+            if (!isNaN(val) && val > max) {
+                Swal.fire({
+                    title: '⚠️ قيمة غير صحيحة',
+                    text: `القيمة لا ينبغي أن تتجاوز ${max}.`,
+                    icon: 'warning',
+                    confirmButtonText: 'حسناً'
+                });
+                input.value = '';
+                display.classList.add('hidden');
+                ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
+                container.classList.add('border-r-4', 'border-gray-200');
+                return;
+            }
+
+            if (isNaN(val)) {
+                display.classList.add('hidden');
+                ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
+                container.classList.add('border-r-4', 'border-gray-200');
+                return;
+            }
+
+            const rateObj = ratings.find(r => val >= r.min);
+            if (!rateObj) {
+                display.classList.add('hidden');
+                return;
+            }
+
+            display.value = `${rateObj.labelAr} / ${rateObj.labelEn} (${val}%)`;
+            display.classList.remove('hidden');
+            ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
+            container.classList.add(...rateObj.borderColor.split(' '));
+        }
+
+        // يجمع جميع البيانات من النموذج في الكائن inspectionData
+        function collectFormData() {
+            const generalChecks = [];
+            inspectionDataAr[selectedBikeType].forEach((section, sIdx) => {
+                section.parts.forEach((partAr, pIdx) => {
+                    const partEn = inspectionDataEn[selectedBikeType][sIdx].parts[pIdx];
+                    const selVal = document.getElementById(`generalRating_${sIdx}_${pIdx}`).value;
+                    const rateObj = ratings[selVal];
+                    const extra = document.getElementById(`extraInput_${sIdx}_${pIdx}`).value || '—';
+                    const note = document.getElementById(`generalNotes_${sIdx}_${pIdx}`).value || '—';
+
+                    generalChecks.push({
+                        section: section.name || '',              // إذا لم يكن هنالك اسم للقسم
+                        partAr,
+                        partEn,
+                        rating: rateObj
+                            ? `${rateObj.labelAr} / ${rateObj.labelEn}`
+                            : '—',
+                        extra,   // النصّ الإضافي الذي أدخله المستخدم
+                        note     // ملاحظات المستخدم
+                    });
+                });
+            });
+
+            inspectionData = {
+                inspectionNumber: document.getElementById('inspectionNumber').value,
+                inspectionDate: document.getElementById('inspectionDate').value,
+                engineer: document.getElementById('engineer').value,
+                branch: document.getElementById('branch').value,
+                customer: document.getElementById('customer').value,
+                phone: document.getElementById('phone').value,
+                model: document.getElementById('model').value,
+                color: document.getElementById('color').value,
+                year: document.getElementById('year').value,
+                vin: document.getElementById('vin').value,
+                mileage: document.getElementById('mileage').value,
+                plateNumber: document.getElementById('plateNumber').value,
+                notes: document.getElementById('notes').value,
+                photos: uploadedPhotos,
+                pressureChecks: (pressureFields[selectedBikeType] || []).map((part, i) => ({
+                    part,
+                    arName: pressureFieldsAr[selectedBikeType][i],
+                    value: document.getElementById(`pressure_${i}`).value || '—',
+                    rating: document.getElementById(`rating_${i}`).value || '—',
+                    note: document.getElementById(`notes_${i}`).value || ''
+                })),
+                generalChecks    // مصفوفة البنود مع الحقل الإضافي
+            };
+        }
+
+
+        // يولد ويعرض صفحة التقرير كاملة
+        function generateReport() {
+            const container = document.getElementById('reportContainer');
+            container.innerHTML = `
+        <div class="bg-gray-950 rounded-md p-6 mb-8 text-white">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-center md:text-right mb-6 md:mb-0">
+                            <h1 class="text-3xl font-bold text-gold-500 mb-2 text-yellow-500">رود بايكر للدراجات النارية</h1>
+                            <p class="opacity-90 text-sm">العنوان: الرئيسي - الرياض، حي الرمال<br>رقم الهاتف: 0500123007</p>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h1 class="text-3xl font-bold mb-2 en-text text-yellow-500">Road Biker Motorcycles</h1>
+                            <p class="opacity-90 en-text text-sm">Address: Riyadh, Al-Rimal District<br>Phone: 0500123007</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">تقرير فحص دراجة نارية</h2>
+                    <h3 class="text-2xl text-gray-600 en-text">Motorcycle Inspection Report</h3>
+                </div>
+                
+                <div class="mb-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">رقم الفحص / Inspection No.</p>
+                            <p>${inspectionData.inspectionNumber}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">تاريخ الفحص / Inspection Date</p>
+                            <p>${inspectionData.inspectionDate}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold border-b-2 border-gold-500 pb-2 mb-4">بيانات العميل / Customer Data</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">المهندس / Engineer</p>
+                            <p>${inspectionData.engineer}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">الفرع / Branch</p>
+                            <p>${inspectionData.branch}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">العميل / Customer</p>
+                            <p>${inspectionData.customer}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">الهاتف / Phone</p>
+                            <p>${inspectionData.phone}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold border-b-2 border-gold-500 pb-2 mb-4">بيانات الدراجة النارية / Motorcycle Data</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">الطراز / Model</p>
+                            <p>${inspectionData.model}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">اللون / color</p>
+                            <p>${inspectionData.color}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">الموديل / Year</p>
+                            <p>${inspectionData.year}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">رقم الشاصي / VIN</p>
+                            <p>${inspectionData.vin}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">المسافة المقطوعة / Mileage</p>
+                            <p>${inspectionData.mileage}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <p class="font-bold">رقم اللوحة / Plate Number</p>
+                            <p>${inspectionData.plateNumber}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${generatePressureReport()}
+                ${generateGeneralReport()}
+                ${generateNotesReport()}
+                ${generatePhotosReport()}
+                
+                <div class="bg-yellow-50 border-l-4 border-r-4 border-yellow-500 p-4 rounded-lg mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <p class="font-bold">⚠ ملاحظة:</p>
+                            <p>لا يتحمّل المحل أي مسؤولية عن الدراجة بعد خروجها من المحل.</p>
+                            <p class="mt-2"><a href="https://linkfly.to/ROAD-BIKER?utm_source=qr" target="_blank" class="inline-block bg-black hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">اضغط هنا للإستفسارات</a></p>
+                        </div>
+                        <div class="en-text">
+                            <p class="font-bold">⚠ Note:</p>
+                            <p>store is not responsible for the bike after it leaves.</p>
+                            <p class="mt-2"><a href="https://linkfly.to/ROAD-BIKER?utm_source=qr" target="_blank" class="inline-block bg-black hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">Click here for inquiries</a></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // يولد جزء "ملاحظات إضافية"
+        function generateNotesReport() {
+            if (!inspectionData.notes) return '';
+            return `
+    <div class="mb-8">
+        <h3 class="text-xl font-bold border-b-2 border-gold-500 pb-2 mb-4">
+          ملاحظات إضافية / Additional Notes
+        </h3>
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <p>${inspectionData.notes.replace(/\n/g, '<br>')}</p>
+        </div>
+    </div>`;
+        }
+
+        // يولد جزء الصور في التقرير
+        function generatePhotosReport() {
+            if (!inspectionData.photos.length) return '';
+            let html = `
+    <div class="mb-8">
+      <h3 class="text-xl font-bold border-b-2 border-gold-500 pb-2 mb-4">الصور / Photos</h3>
+      <div class="report-photo-grid">
+    `;
+            inspectionData.photos.forEach(p => {
+                html += `
+        <div class="report-photo-item">
+          <img src="${p.src}" alt="${p.name}">
+        </div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        // يولد جزء "فحص نظام الضغط" في التقرير
+        function generatePressureReport() {
+  if (!inspectionData.pressureChecks?.length) return '';
+  const arr = inspectionData.pressureChecks;
+  const total = arr.length;
+
+  let html = `
+    <div class="mb-8">
+      <h3 class="text-xl font-bold border-b-2 border-blue-900 pb-2 mb-4 text-blue-900">
+        <i class="fas fa-tachometer-alt"></i>
+        فحص نظام الضغط / Pressure System Check
+      </h3>
+      <!-- عمود واحد على الموبايل، وعمودين على الشاشات ≥sm -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+  `;
+
+  arr.forEach((pc, i) => {
+    // إذا هذا آخر عنصر وعدد العناصر فردي → يملأ العمودين
+    const isLastOdd = (i === total - 1) && (total % 2 !== 0);
+    const spanClass = isLastOdd ? 'sm:col-span-2' : '';
+
+    // حدّ بلون حسب التقييم
+    const rateObj = ratings.find(r => pc.rating.startsWith(r.labelAr)) || {};
+    const borderColor = rateObj.borderColor || 'border-gray-300';
+
+    html += `
+      <div class="bg-gray-50 p-4 rounded-lg border ${borderColor}">
+        <p class="font-bold">${pc.arName} / ${pc.part}</p>
+        <p class="mt-2">النسبة: ${pc.value}</p>
+        <p class="mt-2">الملاحظات: ${pc.note}</p>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+  `;
+  return html;
+}
+
+
+        // يولد جزء "فحص النظام العام" في التقرير
+        function generateGeneralReport() {
+            if (!inspectionData.generalChecks?.length) return '';
+            let html = `
+    <div class="mb-8">
+      <h3 class="text-xl font-bold border-b-2 border-blue-900 pb-2 mb-4 text-blue-900">
+        <i class="fas fa-cogs"></i> فحص النظام العام / General system check
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  `;
+
+            inspectionData.generalChecks.forEach(gc => {
+                // اختر لون الحد حسب التقييم
+                const rateObj = ratings.find(r => gc.rating.startsWith(r.labelAr)) || {};
+                const borderColor = rateObj.borderColor || 'border-r-4 border-gray-300';
+
+                html += `
+      <div class="bg-gray-50 p-4 rounded-lg border border-gray-300 ${borderColor}">
+        <p class="font-bold">${gc.partAr} / ${gc.partEn}</p>
+        <p class="mt-2">التقييم: ${gc.extra}</p>
+        <p class="mt-2">الملاحظات: ${gc.note}</p>
+      </div>
+    `;
+            });
+
+            html += `</div></div>`;
+            return html;
+        }
+
+
+
+
+        function generateInspectionNumber() {
+            const now = new Date();
+            const y = now.getFullYear().toString().slice(-2);
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const rand = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('inspectionNumber').value = `INS-${y}${m}${d}-${rand}`;
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function saveState() {
+            const els = document.querySelectorAll('#inspectionForm input, #inspectionForm textarea, #inspectionForm select');
+            const formData = {};
+            els.forEach(el => {
+                if (el.type === 'submit' || el.type === 'button') return;
+                formData[el.id] = el.value;
+            });
+            const reportContainer = document.getElementById('reportContainer');
+            const reportHTML = reportContainer ? reportContainer.innerHTML : '';
+            const state = {
+                currentPage: document.querySelector('.page.active').id,
+                selectedBikeType,
+                formData,
+                photos: uploadedPhotos,
+                reportHTML
+            };
+            sessionStorage.setItem('inspectionState', JSON.stringify(state));
+        }
+
+        function restoreState() {
+            const raw = sessionStorage.getItem('inspectionState');
+            if (!raw) return;
+            const { currentPage, selectedBikeType: type, formData, photos, reportHTML } = JSON.parse(raw);
+
+            showPage(currentPage);
+
+            if (type) {
+                selectedBikeType = type;
+                document.querySelector(`.motorcycle-card[data-type="${type}"]`).classList.add('selected-bike');
+            }
+
+            // إذا كنا في صفحة التقرير، نعيد الـ HTML وننهي
+            if (currentPage === 'reportPage') {
+                document.getElementById('reportContainer').innerHTML = reportHTML;
+                return;
+            }
+
+            renderPressureChecks();
+            renderGeneralChecks();
+
+            // استرجاع قيم الحقول
+            document.querySelectorAll('#inspectionForm input, #inspectionForm textarea, #inspectionForm select')
+                .forEach(el => {
+                    if (formData.hasOwnProperty(el.id)) el.value = formData[el.id];
+                });
+
+            // تحديث التقييمات
+            (pressureFields[selectedBikeType] || []).forEach((_, i) => updateRating(i));
+            (inspectionDataAr[selectedBikeType] || []).forEach((section, sIdx) =>
+                section.parts.forEach((_, pIdx) => updateGeneralAppearance(sIdx, pIdx))
+            );
+
+            // استرجاع الصور إن وجدت العنصر
+            const preview = document.getElementById('photosPreview');
+            if (preview) {
+                preview.innerHTML = '';
+                uploadedPhotos = photos || [];
+                uploadedPhotos.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'photo-item';
+                    const img = document.createElement('img');
+                    img.src = p.src; img.alt = p.name;
+                    const btn = document.createElement('button');
+                    btn.className = 'photo-remove-btn';
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                    btn.onclick = () => {
+                        div.remove();
+                        uploadedPhotos = uploadedPhotos.filter(x => x.src !== p.src);
+                        saveState();
+                    };
+                    div.append(img, btn);
+                    preview.append(div);
+                });
+            }
+        }
+
+        window.addEventListener('beforeunload', saveState);
+
+        function formatDate(iso) {
+            return iso.split('-').reverse().join('-');
+        }
+
+        // ===== PHOTO MANAGER =====
+        const PhotoManager = {
+            maxPhotos: 20,
+            maxSize: 5 * 1024 * 1024,
+            allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+
+            showPhotoSourceDialog() {
+                const html = `
+          <div>
+            <h3>اختر مصدر الصورة</h3>
+            <button id="uploadBtn" class="swal2-confirm swal2-styled">رفع من الجهاز</button>
+            <button id="cameraBtn" class="swal2-confirm swal2-styled">التقاط بالكاميرا</button>
+          </div>`;
+                Swal.fire({ html, showConfirmButton: false, showCancelButton: true, cancelButtonText: 'إلغاء' });
+                document.getElementById('uploadBtn').onclick = () => {
+                    Swal.close();
+                    document.getElementById('photoInput').click();
+                };
+                document.getElementById('cameraBtn').onclick = () => {
+                    Swal.close();
+                    this.triggerCamera();
+                };
+            },
+
+            triggerCamera() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.capture = 'environment';
+                input.onchange = e => this.handleFiles(e.target.files);
+                input.click();
+            },
+
+            handleFiles(fileList) {
+                const files = Array.from(fileList);
+                if (files.length + (document.getElementById('photosPreview')?.children.length || 0) > this.maxPhotos) {
+                    return Utils.showAlert('تحذير', `لا يمكن رفع أكثر من ${this.maxPhotos} صورة`, 'warning');
+                }
+                files.forEach(file => {
+                    if (!this.allowedTypes.includes(file.type)) {
+                        return Utils.showAlert('خطأ', 'نوع ملف غير مدعوم', 'error');
+                    }
+                    if (file.size > this.maxSize) {
+                        return Utils.showAlert('خطأ', 'حجم الملف كبير جداً', 'error');
+                    }
+                    this.compressImage(file)
+                        .then(cmp => this.readAndDisplay(cmp))
+                        .catch(() => this.readAndDisplay(file));
+                });
+            },
+
+            compressImage(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        const img = new Image();
+                        img.src = ev.target.result;
+                        img.onload = () => {
+                            const MAX_W = 1024, MAX_H = 768;
+                            let { width, height } = img;
+                            if (width > height && width > MAX_W) { height *= MAX_W / width; width = MAX_W; }
+                            else if (height > MAX_H) { width *= MAX_H / height; height = MAX_H; }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width; canvas.height = height;
+                            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                            canvas.toBlob(blob => {
+                                if (!blob) return reject();
+                                resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                            }, 'image/jpeg', 0.7);
+                        };
+                        img.onerror = reject;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            readAndDisplay(file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const src = e.target.result;
+                    const div = document.createElement('div');
+                    div.className = 'photo-item';
+                    const img = document.createElement('img');
+                    img.src = src; img.alt = file.name;
+                    const btn = document.createElement('button');
+                    btn.className = 'photo-remove-btn';
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                    btn.onclick = () => {
+                        div.remove();
+                        uploadedPhotos = uploadedPhotos.filter(p => p.src !== src);
+                        saveState();
+                    };
+                    div.append(img, btn);
+                    document.getElementById('photosPreview').append(div);
+
+                    uploadedPhotos.push({ src, name: file.name });
+                    saveState();
+                    document.getElementById('photoInput').value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        // ===== UTILITIES =====
+        const Utils = {
+            generateInspectionNumber() {
+                const now = new Date();
+                const y = now.getFullYear().toString().slice(-2);
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                const rand = Math.floor(1000 + Math.random() * 9000);
+                return `INS-${y}${m}${d}-${rand}`;
+            },
+            showAlert(title, text, icon = 'info') {
+                return Swal.fire({ title, text, icon, confirmButtonText: 'حسناً', confirmButtonColor: '#3b82f6' });
+            }
+        };
+
+        function printReport() {
+            const num = document.getElementById('inspectionNumber').value || 'REPORT';
+            const original = document.title;
+            document.title = num;
+            window.print();
+            setTimeout(() => document.title = original, 1000);
+        }
+
+        function goBack() {
+            // 1) جلب الحالة المحفوظة
+            const raw = sessionStorage.getItem('inspectionState');
+            if (!raw) {
+                // إذا ما في حالة، اعرض الصفحة مباشرة
+                return showPage('dataEntryPage');
+            }
+
+            // 2) حدّث الـ currentPage إلى dataEntryPage
+            const state = JSON.parse(raw);
+            state.currentPage = 'dataEntryPage';
+            sessionStorage.setItem('inspectionState', JSON.stringify(state));
+
+            // 3) أعد بناء الصفحة (ستقوم restoreState برسم الحقول الديناميكية وتعبئة القيم)
+            restoreState();
+        }
+
+
+        /**
+         * يعرض تأكيد قبل العودة للصفحة الأولى
+         */
+        function confirmBack() {
+            Swal.fire({
+                title: '⚠️ هل تريد العودة للرئيسية؟',
+                text: 'سيتم فقدان جميع البيانات المدخلة والصور.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم',
+                cancelButtonText: 'إلغاء'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // 1) مسح الحالة
+                    sessionStorage.removeItem('inspectionState');
+
+                    // 2) إعادة تهيئة المتغيّرات
+                    uploadedPhotos = [];
+                    selectedBikeType = null;
+
+                    // 3) إزالة تمييز البطاقة
+                    document.querySelectorAll('.motorcycle-card')
+                        .forEach(c => c.classList.remove('selected-bike'));
+
+                    // 4) إعادة ضبط النموذج
+                    const form = document.getElementById('inspectionForm');
+                    if (form) form.reset();
+
+                    // 5) إعادة ضبط حقل التاريخ ورقم الفحص
+                    const todayISO = new Date().toISOString().split('T')[0];
+                    document.getElementById('inspectionDate').value = formatDate(todayISO);
+                    document.getElementById('inspectionDate').max = todayISO;
+                    generateInspectionNumber();
+
+                    // 6) تفريغ معاينة الصور
+                    const preview = document.getElementById('photosPreview');
+                    if (preview) preview.innerHTML = '';
+
+                    // 7) إخفاء أقسام الفحص (لأنه لا توجد دراجة مختارة)
+                    renderPressureChecks();
+                    renderGeneralChecks();
+
+                    // 8) عرض الصفحة الرئيسية
+                    showPage('welcomePage');
+                }
+            });
+        }
+
+        /**
+         * يعرض تأكيد قبل إعادة ضبط النموذج بالكامل
+         */
+        function resetForm() {
+            Swal.fire({
+                title: '⚠️ هل تريد مسح جميع الحقول؟',
+                text: 'سيتم إعادة ضبط النموذج وكل القيم المدخلة.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم',
+                cancelButtonText: 'لا'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    // 1) احفظ رقم الفحص والتاريخ الحاليين
+                    const numberEl = document.getElementById('inspectionNumber');
+                    const dateEl = document.getElementById('inspectionDate');
+                    const prevNumber = numberEl.value;
+                    const prevDate = dateEl.value;
+
+                    // 2) أعد ضبط النموذج
+                    const form = document.getElementById('inspectionForm');
+                    form.reset();
+
+                    // 3) أعد رقم الفحص والتاريخ إلى ما كانا عليه
+                    numberEl.value = prevNumber;
+                    dateEl.value = prevDate;
+
+                    // 4) إعادة رسم الأقسام الديناميكية
+                    renderPressureChecks();
+                    renderGeneralChecks();
+
+                    // 5) مسح الصور وإعادة المعاينة
+                    uploadedPhotos = [];
+                    document.getElementById('photosPreview').innerHTML = '';
+
+                    // 6) حفظ الحالة الجديدة
+                    saveState();
+                }
+            });
+        }
+
+    </script>
+</body>
+
+</html>
