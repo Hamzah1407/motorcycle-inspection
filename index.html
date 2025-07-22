@@ -1068,12 +1068,12 @@
 
         // تعريف تقييمات الألوان مع ألوان خلفية مرافقة
         const ratings = [
-            { labelAr: 'ممتاز', labelEn: 'Excellent', min: 90, borderColor: 'border-r-10 border-r-green-500' },
-            { labelAr: 'جيد جداً', labelEn: 'Very Good', min: 75, borderColor: 'border-r-10 border-r-green-500' },
-            { labelAr: 'جيد', labelEn: 'Good', min: 60, borderColor: 'border-r-10 border-r-yellow-300' },
-            { labelAr: 'مقبول', labelEn: 'Acceptable', min: 40, borderColor: 'border-r-10 border-r-yellow-300' },
-            { labelAr: 'ضعيف', labelEn: 'Weak', min: 20, borderColor: 'border-r-10 border-r-red-500' },
-            { labelAr: 'تالف', labelEn: 'Damaged', min: 0, borderColor: 'border-r-10 border-r-red-500' },
+            { labelAr: 'ممتاز', labelEn: 'Excellent', min: 90, borderColor: 'border-r-8 border-r-green-500' },
+            { labelAr: 'جيد جداً', labelEn: 'Very Good', min: 75, borderColor: 'border-r-8 border-r-green-500' },
+            { labelAr: 'جيد', labelEn: 'Good', min: 60, borderColor: 'border-r-8 border-r-yellow-300' },
+            { labelAr: 'مقبول', labelEn: 'Acceptable', min: 40, borderColor: 'border-r-8 border-r-yellow-300' },
+            { labelAr: 'ضعيف', labelEn: 'Weak', min: 20, borderColor: 'border-r-8 border-r-red-500' },
+            { labelAr: 'تالف', labelEn: 'Damaged', min: 0, borderColor: 'border-r-8 border-r-red-500' },
         ];
 
 
@@ -1275,26 +1275,45 @@
 
         // يعيّن تقييم بند الفحص العام ويحدّث المظهر
         function setGeneralRating(sIdx, pIdx, ratingIndex) {
-            const container = document.getElementById(`generalCheck_${sIdx}_${pIdx}`);
-            const hiddenInput = document.getElementById(`generalRating_${sIdx}_${pIdx}`);
-            const notes = document.getElementById(`generalNotes_${sIdx}_${pIdx}`);
-            // إزالة التحديد من جميع الأزرار
-            container.querySelectorAll('.rating-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-500', 'text-white');
-                btn.classList.add('bg-white', 'text-gray-800');
-            });
-            // تلوين الزر المختار
-            const selectedBtn = container.querySelector(`.rating-btn[data-index="${ratingIndex}"]`);
-            selectedBtn.classList.remove('bg-white', 'text-gray-800');
-            selectedBtn.classList.add('bg-blue-500', 'text-white');
-            // تخزين القيمة وتحديث الحدود
-            hiddenInput.value = ratingIndex;
-            ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
-            const rateObj = ratings[ratingIndex];
-            container.classList.add(...rateObj.borderColor.split(' '));
-            // إظهار خانة الملاحظات
-            notes.classList.remove('hidden');
-        }
+    const container   = document.getElementById(`generalCheck_${sIdx}_${pIdx}`);
+    const hiddenInput = document.getElementById(`generalRating_${sIdx}_${pIdx}`);
+    const notes       = document.getElementById(`generalNotes_${sIdx}_${pIdx}`);
+
+    // إذا ضغطنا على نفس الزر المحدد حاليًا → نلغي التحديد
+    if (hiddenInput.value == ratingIndex) {
+        // إزالة أي لون أو تحديد
+        container.querySelectorAll('.rating-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-500','text-white');
+            btn.classList.add('bg-white','text-gray-800');
+        });
+        // إزالة حدود اللون
+        ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
+        container.classList.add('border-r-4','border-gray-200');
+        // أخفي خانة الملاحظات
+        notes.classList.add('hidden');
+        // أفرغ القيمة المخزنة
+        hiddenInput.value = '';
+        return;
+    }
+
+    // خلاف ذلك، تابع كالسابق: ازل التحديد من الكل
+    container.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-500','text-white');
+        btn.classList.add('bg-white','text-gray-800');
+    });
+    // علم على الزر المضغوط
+    const selectedBtn = container.querySelector(`.rating-btn[data-index="${ratingIndex}"]`);
+    selectedBtn.classList.remove('bg-white','text-gray-800');
+    selectedBtn.classList.add('bg-blue-500','text-white');
+    // خزّن القيمة وحدّث الحدود
+    hiddenInput.value = ratingIndex;
+    ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
+    const rateObj = ratings[ratingIndex];
+    container.classList.add(...rateObj.borderColor.split(' '));
+    // أظهر خانة الملاحظات
+    notes.classList.remove('hidden');
+}
+
 
         // يُعيد المظهر المخزن بعد الاستعادة
         function updateGeneralAppearance(sIdx, pIdx) {
