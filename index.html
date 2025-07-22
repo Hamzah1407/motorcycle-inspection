@@ -1279,9 +1279,9 @@
     const hiddenInput = document.getElementById(`generalRating_${sIdx}_${pIdx}`);
     const notes       = document.getElementById(`generalNotes_${sIdx}_${pIdx}`);
 
-    // إذا ضغطنا على نفس الزر المحدد حاليًا → نلغي التحديد
-    if (hiddenInput.value == ratingIndex) {
-        // إزالة أي لون أو تحديد
+    // إذا القيمة المخزنة تساوي index الزر نفسه → نلغي التحديد
+    if (hiddenInput.value === String(ratingIndex)) {
+        // إزالة تمييز الأزرار
         container.querySelectorAll('.rating-btn').forEach(btn => {
             btn.classList.remove('bg-blue-500','text-white');
             btn.classList.add('bg-white','text-gray-800');
@@ -1289,28 +1289,29 @@
         // إزالة حدود اللون
         ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
         container.classList.add('border-r-4','border-gray-200');
-        // أخفي خانة الملاحظات
+        // أخفي ملاحظات القسم
         notes.classList.add('hidden');
         // أفرغ القيمة المخزنة
         hiddenInput.value = '';
         return;
     }
 
-    // خلاف ذلك، تابع كالسابق: ازل التحديد من الكل
+    // خلاف ذلك: حدِّد الزر الجديد
     container.querySelectorAll('.rating-btn').forEach(btn => {
         btn.classList.remove('bg-blue-500','text-white');
         btn.classList.add('bg-white','text-gray-800');
     });
-    // علم على الزر المضغوط
     const selectedBtn = container.querySelector(`.rating-btn[data-index="${ratingIndex}"]`);
     selectedBtn.classList.remove('bg-white','text-gray-800');
     selectedBtn.classList.add('bg-blue-500','text-white');
-    // خزّن القيمة وحدّث الحدود
-    hiddenInput.value = ratingIndex;
+
+    // خزّن الرقم كسلسلة ووجّه حدود اللون
+    hiddenInput.value = String(ratingIndex);
     ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
     const rateObj = ratings[ratingIndex];
     container.classList.add(...rateObj.borderColor.split(' '));
-    // أظهر خانة الملاحظات
+
+    // أظهر ملاحظات القسم
     notes.classList.remove('hidden');
 }
 
