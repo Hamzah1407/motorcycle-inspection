@@ -1277,9 +1277,9 @@
         function setGeneralRating(sIdx, pIdx, ratingIndex) {
     const container   = document.getElementById(`generalCheck_${sIdx}_${pIdx}`);
     const hiddenInput = document.getElementById(`generalRating_${sIdx}_${pIdx}`);
-    const notes       = document.getElementById(`generalNotes_${sIdx}_${pIdx}`);
+    // const notes     = document.getElementById(`generalNotes_${sIdx}_${pIdx}`); // لم نعد بحاجة إليها هنا
 
-    // إذا القيمة المخزنة تساوي index الزر نفسه → نلغي التحديد
+    // toggle off عند الضغط على نفس الزر
     if (hiddenInput.value === String(ratingIndex)) {
         // إزالة تمييز الأزرار
         container.querySelectorAll('.rating-btn').forEach(btn => {
@@ -1289,14 +1289,12 @@
         // إزالة حدود اللون
         ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
         container.classList.add('border-r-4','border-gray-200');
-        // أخفي ملاحظات القسم
-        notes.classList.add('hidden');
-        // أفرغ القيمة المخزنة
+        // إفراغ القيمة المخزنة
         hiddenInput.value = '';
         return;
     }
 
-    // خلاف ذلك: حدِّد الزر الجديد
+    // خلاف ذلك: تمييز الزر الجديد
     container.querySelectorAll('.rating-btn').forEach(btn => {
         btn.classList.remove('bg-blue-500','text-white');
         btn.classList.add('bg-white','text-gray-800');
@@ -1305,14 +1303,11 @@
     selectedBtn.classList.remove('bg-white','text-gray-800');
     selectedBtn.classList.add('bg-blue-500','text-white');
 
-    // خزّن الرقم كسلسلة ووجّه حدود اللون
+    // خزّن القيمة وحدد حدّ اللون المناسب
     hiddenInput.value = String(ratingIndex);
     ratings.forEach(r => container.classList.remove(...r.borderColor.split(' ')));
     const rateObj = ratings[ratingIndex];
     container.classList.add(...rateObj.borderColor.split(' '));
-
-    // أظهر ملاحظات القسم
-    notes.classList.remove('hidden');
 }
 
 
